@@ -21,3 +21,13 @@ The relevant issues are [125](https://github.com/FortAwesome/angular-fontawesome
    - `prefix` is no longer exported (is it actually needed?), can be accessed using `import { faUser } '@fortawesome/free-regular-svg-icons'` + `faUser.prefix` if necessary
 
    Why not just set fontawesome-common-types as a peer dependency? Well, this will solve 125, but it is even more dependencies for user to install and update. I would really want to avoid that. As a side note, since `angular-fontawesome` now manages icon library itself instead of using one from `fontawesome-svg-core`, I plan to move `fontawesome-svg-core` into regular dependencies, so users only need to deal with one package + any icon packages they want.
+
+4. Forth commit actually solves both 125 (ensures that any imported icons can be used) and 172 (custom icons can be used without `as any` cast). On top of this it provides another nice feature: only icons imported into the TypeScript compilation will show up in the completion list, not all possible icons from all packages.
+
+   The approach relies on TypeScript's [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html). And essentially works like a [module augmentation](https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation) (but without changing runtime, only types). Basically when user imports some icons, the `IconName` and `IconPrefix` types are extended with name and prefix of the imported icon(s). This is a nice feature as it allows to extend `IconName` and `IconPrefix` types with names of custom icons and use them without extra casts on the consumer side.
+
+   The augmentation syntax is currently pretty rough. Unfortunately TS does not support [merging for string unions](https://github.com/Microsoft/TypeScript/issues/20366) and enums [will error](https://www.typescriptlang.org/play/index.html#code/CYUwxgNghgTiAEBbA9sArhBByRBPAtCuplvAN4BQ818IAdmovAJJjJ0ByUiClN-8AJZs6ARgA0QkQCYqNAL4VFFUJFgIiGbHkKotpPjXqMWIrj3JyBU9hJt0AzFfiL5QA) if same value is declared in two places. Probably the syntax of the augmentation can be improved, but for now I'm mostly interested in some initial feedback and discussion to see if it is worths more detailed investigation.
+
+---
+
+In this repository I've only updated icon package's bundle, but it should be trivial to update individual icons in a similar manner.
